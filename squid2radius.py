@@ -110,8 +110,22 @@ for username, total_bytes in sum_bytes.iteritems():
     req['User-Name'] = username
     req['NAS-Identifier'] = args.radius_nasid
     req['Acct-Session-Id'] = session_id
-    req['Acct-Status-Type'] = 2  # Stop
+    req['Acct-Status-Type'] = 3  # UPDATE
     req['Acct-Output-Octets'] = total_bytes
+
+    reply = srv.SendPacket(req)
+    if not reply.code == pyrad.packet.AccountingResponse:
+      raise Exception("Unexpected response from RADIUS server")
+
+    sys.stdout.write('.')
+    sys.stdout.flush()
+
+    req = srv.CreateAcctPacket()
+    req['User-Name'] = username
+    req['NAS-Identifier'] = args.radius_nasid
+    req['Acct-Session-Id'] = session_id
+    req['Acct-Status-Type'] = 2  # Stop
+    req['Acct-Output-Octets'] = 0
 
     reply = srv.SendPacket(req)
     if not reply.code == pyrad.packet.AccountingResponse:
